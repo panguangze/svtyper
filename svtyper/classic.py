@@ -369,14 +369,14 @@ def sv_genotype(bam_string,
                             # ref_span += p_reference
                             # continue
 
-                            fragment.tag_span(p_alt)
+                            fragment.tag_span(var, p_alt)
                             write_fragment = True
 
                     else:
                         p_alt = prob_mapq(fragment.readA) * prob_mapq(fragment.readB)
                         alt_span += p_alt
 
-                        fragment.tag_span(p_alt)
+                        fragment.tag_span(var, p_alt)
                         write_fragment = True
 
                 # # tally spanning reference pairs
@@ -404,7 +404,7 @@ def sv_genotype(bam_string,
                             p_reference = p_conc * prob_mapq(fragment.readA) * prob_mapq(fragment.readB)
                             ref_span += (ref_straddle_A + ref_straddle_B) * p_reference / 2
 
-                            fragment.tag_span(1 - p_conc)
+                            fragment.tag_span(var, 1 - p_conc)
                             write_fragment = True
 
                 # write to BAM if requested

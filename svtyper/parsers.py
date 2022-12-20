@@ -271,6 +271,7 @@ class Variant(object):
         self.format_list = vcf.format_list
         self.active_formats = list()
         self.gts = dict()
+        self.alt_reads = set()
 
         # fill in empty sample genotypes
         if len(var_list) < 8:
@@ -297,6 +298,9 @@ class Variant(object):
                 i.append(True)
             self.info[i[0]] = i[1]
 
+    def set_alt_support(self, read):
+        self.alt_reads.add(read.query_name)
+
     def set_info(self, field, value):
         if field in [i.id for i in self.info_list]:
             self.info[field] = value
@@ -322,7 +326,7 @@ class Variant(object):
         for f in self.format_list:
             if f.id in self.active_formats:
                 f_list.append(f.id)
-        return ':'.join(f_list)
+        return ':'.join(f_list)+":READNAMES"
 
     def genotype(self, sample_name):
         if sample_name in self.sample_list:
@@ -341,7 +345,7 @@ class Variant(object):
             self.filter,
             self.get_info_string(),
             self.get_format_string(),
-            '\t'.join(self.genotype(s).get_gt_string() for s in self.sample_list)
+            '\t'.join(self.genotype(s).get_gt_string() for s in self.sample_list)+":"+",".join(self.alt_reads).replace(":","_COLON_")
         ]))
         return s
 
@@ -768,7 +772,7 @@ class SamFragment(object):
                 self.readA, self.readB = self.primary_reads
 
     # tag the read with R (ref), A (alt), or U (unknown) XV tag
-    def tag_span(self, p_alt=None):
+    def tag_span(self,var,p_alt=None):
         if p_alt is None:
             value = 'U'
         elif p_alt > 0:
@@ -778,6 +782,8 @@ class SamFragment(object):
         for read in self.primary_reads:
             if not read.has_tag('XV'):
                 read.set_tag('XV', value)
+                if value == 'A':
+                    var.set_alt_support(read)
 
         return
 
@@ -1215,7 +1221,7 @@ class SplitRead(object):
         return (left_split, right_split)
 
     # tag the read with R (ref), A (alt), or U (unknown) XV tag
-    def tag_split(self, p_alt=None):
+    def tag_split(self, var, p_alt=None):
         if p_alt is None:
             value = 'U'
         elif p_alt > 0:
@@ -1224,6 +1230,8 @@ class SplitRead(object):
             value = 'R'
 
         self.read.set_tag('XV', value)
+        if value == 'A':
+            var.set_alt_support(read)
 
         return
 
