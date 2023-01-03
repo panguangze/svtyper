@@ -782,8 +782,8 @@ class SamFragment(object):
         for read in self.primary_reads:
             if not read.has_tag('XV'):
                 read.set_tag('XV', value)
-                if value == 'A':
-                    var.set_alt_support(read)
+            if value == 'A':
+                var.set_alt_support(read)
 
         return
 
@@ -1231,7 +1231,7 @@ class SplitRead(object):
 
         self.read.set_tag('XV', value)
         if value == 'A':
-            var.set_alt_support(read)
+            var.set_alt_support(self.read)
 
         return
 
